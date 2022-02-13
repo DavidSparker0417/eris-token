@@ -1,0 +1,39 @@
+:root {
+    --bs-border: 1px solid;
+    /* --bs-bgcolor: #F8F9FA; */
+    --bs-bgcolor: rgba(248, 249, 250, 0.2);
+    --bs-border-color: rgb(117, 121, 128);
+}
+
+body {
+    margin: 0%;
+    background-color: var(--bs-bgcolor);
+}
+
+.eris-sidenav span{
+    font-size: 1rem;
+    font-family:sans-serif;
+    color : rgb(52 71 103);
+}
+
+.return-elem {
+    border: 1px solid #be9adb;
+    display: flex;
+    justify-content: space-between;
+    border-radius: 11.0577px;
+    padding: 20px 10px;
+    margin-top: 20px;
+}
+
+.return-elem p {
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+.eris-navbar {
+    font-size: inherit;
+}
+
+.mobile-navbar {
+    display: none;
+}

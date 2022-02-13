@@ -1,0 +1,49 @@
+[class*=illustration-] {
+	position: relative;
+
+	&::after {
+		pointer-events: none;
+	}
+}
+
+[class*=illustration-element-]::after {
+	z-index: -1;
+}
+
+[class*=illustration-section-]::after {
+	z-index: -2;
+}
+
+// Hero illustration
+.illustration-section-01::after {
+	@include illustration('back1.jpg', 100%, 100%, center);
+	background-position: top left;
+	background-repeat: no-repeat;
+	background-size: cover;
+	opacity: 0.13;
+	transition: background 0.3s, border-radius 0.3s, opacity 0.3s;
+}
+
+// Features illustration 02
+.illustration-section-02::after {
+	@include illustration('back2.jpg', 100%, 100%, center);
+	background-position: top left;
+	background-repeat: no-repeat;
+	background-size: cover;
+	opacity: 0.13;
+	transition: background 0.3s, border-radius 0.3s, opacity 0.3s;
+}
+
+// Features illustration 02
+.illustration-section-03::after {
+	@include illustration('back3.svg', 100%, 253px, null, null, 30px);
+}
+
+.illustration-section-04::after {
+	@include illustration('back4.png', 100%, 100%, center);
+	background-position: top left;
+	background-repeat: no-repeat;
+	background-size: cover;
+	opacity: 0.13;
+	transition: background 0.3s, border-radius 0.3s, opacity 0.3s;
+}

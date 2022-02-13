@@ -1,0 +1,11 @@
+@media (min-width: 320px) and (max-width: 767px) {
+  
+  .eris-navbar {
+    display: none;
+  }
+
+  .mobile-navbar {
+    display: block;
+    position: absolute;
+  }
+}
