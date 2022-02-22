@@ -30,10 +30,14 @@ ReactDOM.render(
       connectors={{
         injected: {
           chainId: [DEST_NET.chainId,],
+          rpc: {
+            [DEST_NET.chainId]: DEST_NET.url
+          }
         },
         walletconnect: {
+          chainId: [DEST_NET.chainId,],
           rpc: {
-            97: DEST_NET.url
+            [DEST_NET.url]: DEST_NET.url
           },
           bridge: 'https://bridge.walletconnect.org',
           pollingInterval: 12000,

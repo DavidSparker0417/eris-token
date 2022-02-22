@@ -6,10 +6,8 @@ import SuiBox from "components/SuiBox";
 import SuiButton from "components/SuiButton";
 import SuiTypography from "components/SuiTypography";
 
-import { connectWallet } from "./TokenInterface";
 import { useEffect, useState } from "react";
-import { useWallet } from 'use-wallet';
-import { isMobile } from 'react-device-detect';
+import { dsWalletConnectInjected, dsWalletGetTrimedAccountName } from "../dslib/ds-web3";
 
 export function ErisAvata({title, icon, fw}) {
   return (
@@ -49,28 +47,26 @@ export default function ErisTitle({chainId, wallet}) {
   const [walletButtonTitle, setWalletButtonTitle] = useState("Connect Wallet")
 
   async function handleConnectWallet() {
-    if (isMobile) {
-      wallet.connect('walletconnect');
+    if (wallet.isConnected()) 
+      return
+    if (window.ethereum) {
+      await dsWalletConnectInjected(chainId)
+      wallet.connect()
     } else {
-      const chainStr = '0x' + chainId.toString(16);
-      await connectWallet(chainStr);
-      wallet.connect();
+      wallet.connect('walletconnect');
     }
   }
   
   useEffect(() => {
-    if (wallet.status === "connected") {
-      setWalletButtonTitle(wallet.account.substr(2, 4) + "..." + wallet.account.substr(-4, 4));
-    }
-    else {
-      setWalletButtonTitle("Connect Wallet")
-    }
+    if (wallet.status === 'connecting')
+      return;
+
+    const btnName = wallet.account !== null 
+      ? dsWalletGetTrimedAccountName(wallet.account)
+      : "Wallet Connect" ;
+    setWalletButtonTitle(btnName)
   }, [wallet.status]);
 
-  useEffect(() => {
-    console.log(wallet.account);
-  }, []);
-  
   return (
     <SuiBox>
       <SuiBox display="flex" justifyContent="end" pt={1}>

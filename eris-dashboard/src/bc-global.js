@@ -2,7 +2,7 @@ export const SM_DEPLOY = {
   contract : {
     local   : "0x3a2226B854996Ae5062BdEE3fc8E79886c1E84a5",
     ropsten : "0x23721F2f3606fFC8b969D4a0fcFf68941fB29F47",
-    bsctst  : "0x10Be96F83C623E2c69E51121B3fB187809C579C5",
+    bsctst  : "0x23420f27964FBd653f807CE212010EaEd82e1A7a",
   },
 }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useWallet } from "use-wallet";
 
 import env from 'dotenv';
@@ -7,7 +7,6 @@ import "./eris-mobile.css";
 import theme from "assets/theme";
 import IconTokenState from 'assets/images/token-state.svg';
 import BackgroundImg from 'assets/images/background.png';
-
 import { ThemeProvider } from "@mui/material/styles";
 import SuiBox from "components/SuiBox";
 import Grid from "@mui/material/Grid";
@@ -33,8 +32,11 @@ import {
   tokenGetWeb3Provider,
   tokenGetRebaseRemaining } from "./eris-components/TokenInterface";
 import ErisTokenAbi from "contracts/ERIS.json";
-import ErisPairAbi from "contracts/Eris2BNB.json";
+// import ErisPairAbi from "contracts/Eris2BNB.json";
 import { RPC_NODES, SM_DEPLOY } from "./bc-global";
+import {dsWeb3GetContract, dsWeb3GetTokenBalance} from './dslib/ds-web3'
+import { erisApy, erisGetBalance, erisGetMarketCap, erisGetPrice, ERIS_REBASE_FREQ } from "./eris-components/eris-token";
+import { toHumanizeFixed } from "dslib/ds-utils";
 
 const REFRESH_INTERVAL = 1000;
 const ERIS_TOKEN_ADDRESS  = SM_DEPLOY.contract.bsctst;
@@ -56,18 +58,7 @@ export default function App({chainId}) {
     roi           :0
   });
   const [rebaseRemain, setRebaseRemain] = useState(0);
-  const timer = useRef();
   const wallet =  useWallet();
-
-  // On initial page load 
-  useEffect(() =>{
-    pageRefresh();
-    log("[ERIS] Page initialized!!");
-
-    return(() =>{
-      clearTimeout(timer.current.timerId);
-    });
-  }, []);
 
   // Rebase remain time downcount
   useEffect(() => {
@@ -86,38 +77,45 @@ export default function App({chainId}) {
   }
 
   // refreshing overall page information
-  async function pageRefresh() {
-    log("[ERIS] Page refreshing... walletState = ", wallet);
-    // get web3 provider
-    const web3Provider = tokenGetWeb3Provider();
-    if (web3Provider === null)
-    {
-      log("[ERIS](pageRefresh) Cannot get web3 provider...");
-      timer.current = setTimeout(pageRefresh, REFRESH_INTERVAL);
-      return;
+  const refresh = useCallback(async () => {
+    log("[ERIS] Page refreshing...");
+    const provider = wallet._web3ReactContext.library
+    const balance = await  erisGetBalance(provider)
+    const price = await erisGetPrice()
+    const marketCap = await erisGetMarketCap()
+    const apy =  toHumanizeFixed(erisApy(MIN_PER_YEAR)*100)
+    const nextReward = erisApy(ERIS_REBASE_FREQ) - 1;
+    const nextRewardAmount = nextReward * balance;
+    const nextRewardYield = toHumanizeFixed(nextReward * 100);
+    const roi = (erisApy(MIN_PER_DAY*5) - 1) * 100;
+    console.log("++++++ roi = ", roi)
+    setTokenInfo({
+      price: price, 
+      marketCap:marketCap, 
+      apy:apy
+    });
+    setStkStat({
+      apy:apy, 
+      walletBalance:balance, 
+      nrAmount: nextRewardAmount, 
+      nrYield: nextRewardYield, 
+      roi: roi});
+  }, [wallet.account])
+
+  useEffect(() => {
+    log("+++++++++ Initial loading ++++++++++")
+    let ac = new AbortController()
+    const callRefresh = async () => {
+      refresh().then(() => {
+        if (ac.signal.aborted === false) {
+          setTimeout(() => callRefresh(), REFRESH_INTERVAL)
+        }
+      })
     }
-    // get token price;
-    const erisToken = tokenGetContract(ERIS_TOKEN_ADDRESS, ErisTokenAbi.abi);
-    const tokenPrice = (await tokenGetPrice(erisToken, ErisPairAbi, BUSD_TOKEN_ADDRESS)).toFixed(6);
-    // get marketing cap
-    const market = (await tokenGetMarketCap(erisToken, MARKETING_FACTOR)).toFixed(0);
-    // calculate apy
-    const apy = (CalculateRewardsCustom(MIN_PER_YEAR) * 100).toFixed(2);
-    // set ui data of main face
-    setTokenInfo({price: tokenPrice, marketCap:market, apy:apy});
-    // get wallet info
-    const walletBalance = await tokenWalletBalance(web3Provider, erisToken);
-    // calculate return funds info
-    const nextReward = CalculateRewardsCustom(REBASE_FREQ) - 1;
-    const nextRewardAmount = nextReward * walletBalance;
-    const nextRewardYield = (nextReward * 100).toFixed(5);
-    const roi = (CalculateRewardsCustom(MIN_PER_DAY*5) - 1) * 100;
-    // set ui data of statisics
-    setStkStat({apy:apy, walletBalance:walletBalance, nrAmount: nextRewardAmount, nrYield: nextRewardYield, roi: roi});
-    // end of refresh
-    clearTimeout(timer.current);
-    timer.current = setTimeout(pageRefresh, REFRESH_INTERVAL);
-  }
+
+    callRefresh()
+    return () => ac.abort()
+  }, [refresh])
 
   return (
     <ThemeProvider theme={theme}>
